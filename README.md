@@ -5,7 +5,7 @@
 - cd backend
 - composer install
 
-## how to use
+## How to use
 
 - php artisan salary:create_sheet (creates a full CSV for the current year)
 - php artisan salary:create_sheet --month={1-12} (you can select the month)

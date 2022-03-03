@@ -22,7 +22,7 @@ class CreateSalarySheet extends Command
      *
      * @var string
      */
-    protected $description = 'Creates a salary sheet based on rules specified on config/salary.php';
+    protected $description = 'Creates a salary and bonus sheet (CSV)';
 
     /**
      * Create a new command instance.
