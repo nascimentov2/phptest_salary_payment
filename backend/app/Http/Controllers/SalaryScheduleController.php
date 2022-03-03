@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreSalaryScheduleRequest;
 use App\Http\Requests\UpdateSalaryScheduleRequest;
 use App\Models\SalarySchedule;
+use File;
 
 class SalaryScheduleController extends Controller
 {
@@ -102,6 +103,11 @@ class SalaryScheduleController extends Controller
             $schedule[$month] = [];
         }
 
+        if($year < 1970)
+        {
+            return ['status' => false, 'message' => 'The year must be higher than 1969'];
+        }
+
         if(!is_null($filter))
         {
             if(!array_key_exists($filter, $schedule))
@@ -112,8 +118,9 @@ class SalaryScheduleController extends Controller
 
         foreach($schedule as $month => $m_data)
         {
-            $schedule[$month]['payment_day'] = self::paymentDay($month, $year);
-            $schedule[$month]['bonus_day'] = self::bonusDay($month, $year); 
+            $schedule[$month]['payment_day']= self::paymentDay($month, $year);
+            $schedule[$month]['bonus_day']  = self::bonusDay($month, $year);
+            $schedule[$month]['month_name'] = date('F', strtotime($year.'-'.$month.'-01'));
         }
 
         $return = ['status' => true, 'message' => 'Schedule generated sucessfully!'];
@@ -137,11 +144,44 @@ class SalaryScheduleController extends Controller
      * @param  (int) $year
      * @return (array) $schedule
      */
-    private static function paymentDay($month, $year)
+    public static function generateFiles($folder, $filename, $filedata, $format='csv')
+    {
+        $path = storage_path('app/public/csv/'.$folder.'/');
+
+        File::ensureDirectoryExists($path);
+
+        $file = 'payment_'.$filename.'.csv';
+
+        $f_open = fopen($path.$file, 'w');
+
+        $columns = ['month', 'payment', 'bonus'];
+
+        fputcsv($f_open, $columns);
+
+        foreach($filedata['schedule'] as $month => $data)
+        {
+            $data_to_csv = ['month' => $data['month_name'], 'payment' => $data['payment_day'], 'bonus' => $data['bonus_day']];
+
+            fputcsv($f_open, $data_to_csv);
+        }
+
+        fclose($f_open);
+
+        return $path.$file;
+    }
+
+    /**
+     * Generates payment day
+     *
+     * @param  (int) $month
+     * @param  (int) $year
+     * @return (array) $schedule
+     */
+    private static function paymentDay($month, $year, $param_day='w')
     {
         $last_day = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 
-        $day_of_the_week = date('w', strtotime($year.'-'.$month.'-'.$last_day));
+        $day_of_the_week = date($param_day, strtotime($year.'-'.$month.'-'.$last_day));
 
         switch($day_of_the_week)
         {

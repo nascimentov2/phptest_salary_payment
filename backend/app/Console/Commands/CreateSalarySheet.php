@@ -83,28 +83,11 @@ class CreateSalarySheet extends Command
         
         if($schedule['status'] === true)
         {
-            $path = storage_path('app/public/csv/'.$year.'/');
-
-            File::ensureDirectoryExists($path);
-
-            $file = 'payment_'.$opt_month.'.csv';
-
-            $f_open = fopen($path.$file, 'w');
-
-            $columns = ['month', 'payment', 'bonus'];
-
-            fputcsv($f_open, $columns);
-
-            foreach($schedule['schedule'] as $month => $data)
-            {
-                $data_to_csv = ['month' => $month, 'payment' => $data['payment_day'], 'bonus' => $data['bonus_day']];
-
-                fputcsv($f_open, $data_to_csv);
-            }
-
-            fclose($f_open);
-
             $this->info($schedule['message']);
+
+            $file = SalarySchedule::generateFiles($year, $opt_month, $schedule);
+
+            $this->info('The file was saved in '. $file);
         }
         else
         {
